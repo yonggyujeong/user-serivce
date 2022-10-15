@@ -1,6 +1,7 @@
 package com.example.userserivce.Controller;
 
 import com.example.userserivce.Dto.UserDto;
+import com.example.userserivce.jpaRepository.UserEntity;
 import com.example.userserivce.service.UserService;
 import com.example.userserivce.vo.Greeting;
 import com.example.userserivce.vo.RequestUser;
@@ -16,24 +17,31 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RestController
-@RequestMapping("/")
+@RequestMapping("/user-service")
 public class UserController {
 
-    @Autowired
+    Environment env;
     private UserService userService;
 
-    @Autowired //필드 injection은 권장되지 않음
-    private Greeting greeting;
+    @Autowired
+    public UserController(Environment env, UserService userService) {
+        this.env = env;
+        this.userService = userService;
+    }
 
     @GetMapping("/health-check")
     public String status(){
-        return "It's working on user-service";
+        return String.format("It's working on user-service on PORT %s"
+                , env.getProperty("local.server.port")); // 포트번호 확인
     }
 
     @GetMapping("/welcome")
     public String welcome(){
-        return greeting.getMessage();
+        return env.getProperty("greeting.message");
     }
 
     @PostMapping("/users")
@@ -45,6 +53,30 @@ public class UserController {
 
         ResponseUser responseUser = mapper.map(userDto, ResponseUser.class);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseUser); //201번 생성됨
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseUser); //201번(생성됨)
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<ResponseUser>> users(){
+        Iterable<UserEntity> userList = userService.getUserByAll();
+
+        // 변환
+        ModelMapper modelMapper = new ModelMapper();
+        List<ResponseUser> result = new ArrayList<>();
+        userList.forEach(v -> {
+            result.add(modelMapper.map(v, ResponseUser.class));
+        });
+
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<ResponseUser> getUser(@PathVariable("userId") String userId){
+        UserDto userDto = userService.getUserById(userId);
+        ModelMapper mapper = new ModelMapper();
+        ResponseUser responseUser = mapper.map(userDto, ResponseUser.class);
+
+        return ResponseEntity.status(HttpStatus.OK).body(responseUser);
     }
 }
