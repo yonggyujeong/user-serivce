@@ -51,14 +51,22 @@ public class WebSecurity {
     @Bean
     @Order(SecurityProperties.BASIC_AUTH_ORDER)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+
+        // Configure AuthenticationManagerBuilder
+        AuthenticationManagerBuilder authenticationManagerBuilder =
+                http.getSharedObject(AuthenticationManagerBuilder.class);
+
+        AuthenticationManager authenticationManager = authenticationManagerBuilder.build();
+
+
         http.csrf().disable();
 //        http.authorizeRequests().antMatchers("/users/**").permitAll();
 
         // 인증이 된 내역만 혀용
-//        http.authorizeRequests().antMatchers("/**")
-//                        .hasIpAddress("192.168.200.103")
-//                            .and()
-//                            .addFilter(getAuthenticationFilter());
+        http.authorizeRequests().antMatchers("/**")
+                        .hasIpAddress("192.168.200.103")
+                            .and()
+                            .addFilter(getAuthenticationFilter(authenticationManager));
 
 
 
@@ -69,7 +77,6 @@ public class WebSecurity {
 
         return http.build();
     }
-
 
 
     private AuthenticationFilter getAuthenticationFilter(AuthenticationManager authenticationManager) { // 파라메터로 받음
