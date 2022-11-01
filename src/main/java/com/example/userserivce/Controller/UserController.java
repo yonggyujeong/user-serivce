@@ -35,8 +35,11 @@ public class UserController {
 
     @GetMapping("/health-check")
     public String status(){
-        return String.format("It's working on user-service on PORT %s"
-                , env.getProperty("local.server.port")); // 포트번호 확인
+        return String.format("It's working on user-service on PORT"
+                + ", port(local.server.port)=" + env.getProperty("local.server.port")
+                + ", port(server.port)=" + env.getProperty("server.port")
+                + ", token secret=" + env.getProperty("token.secret")
+                + ", token expiration-time=" + env.getProperty("token.expiration-time"));
     }
 
     @GetMapping("/welcome")
@@ -44,6 +47,7 @@ public class UserController {
         return env.getProperty("greeting.message");
     }
 
+    // 회원가입
     @PostMapping("/users")
     public ResponseEntity<ResponseUser> createuser(@RequestBody RequestUser requestUser){
         ModelMapper mapper = new ModelMapper();
@@ -56,6 +60,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseUser); //201번(생성됨)
     }
 
+    // 유저 조회
     @GetMapping("/users")
     public ResponseEntity<List<ResponseUser>> users(){
         Iterable<UserEntity> userList = userService.getUserByAll();
@@ -71,6 +76,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
+    // 유저 조회
     @GetMapping("/users/{userId}")
     public ResponseEntity<ResponseUser> getUser(@PathVariable("userId") String userId){
         UserDto userDto = userService.getUserById(userId);
@@ -79,4 +85,5 @@ public class UserController {
 
         return ResponseEntity.status(HttpStatus.OK).body(responseUser);
     }
+
 }

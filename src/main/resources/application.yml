@@ -3,6 +3,11 @@ server:
 spring:
   application:
     name: user-service
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
   h2:
     console:
       enabled: true # 콘솔 접속
@@ -27,3 +32,20 @@ eureka:
 
 greeting:
   message: Welcome to my e-commerce
+
+logging:
+  level:
+    #org.apache.coyote.http11: debug
+    com.example.userserivce: DEBUG # 디버그 모드 부터 출력
+#logging.level.org.apache.coyote.http11=debug ㅊ*24
+
+#token:
+#  expiration-time: 86400000 # ms단위 60*60*24 * 1000 = 하루
+#  secret: user-token # 토큰이 만들어질 때 반영됨
+
+# actuator end 포인트
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh, health, beans, busrefresh

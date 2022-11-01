@@ -15,4 +15,6 @@ public interface UserService extends UserDetailsService {
     //DB의 값을 그냥 바로 반환하기만 한다면 Entity로 그냥 반환해도 됨
     UserDto getUserById(String userId);
     Iterable<UserEntity> getUserByAll();
+
+    UserDto getUserDetailsByEmail(String username);
 }
