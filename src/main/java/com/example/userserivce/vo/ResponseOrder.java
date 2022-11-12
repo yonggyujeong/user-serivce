@@ -1,7 +1,10 @@
 package com.example.userserivce.vo;
 
+import lombok.Data;
+
 import java.util.Date;
 
+@Data
 public class ResponseOrder {
 
     private String productId;
@@ -10,5 +13,5 @@ public class ResponseOrder {
     private Integer totalPrice;
     private Date createdAt;
 
-    private String orderid;
+    private String orderId;
 }
