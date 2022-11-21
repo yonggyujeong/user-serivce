@@ -11,6 +11,8 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.modelmapper.spi.MatchingStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
@@ -36,6 +38,7 @@ public class UserServiceImpl implements UserService{
     RestTemplate restTemplate;
 
     OrderServiceClient orderServiceClient;
+    CircuitBreakerFactory circuitBreakerFactory;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -52,13 +55,15 @@ public class UserServiceImpl implements UserService{
 
     @Autowired //생성자 주입이 더 좋음
     public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder
-            , Environment env, RestTemplate restTemplate, OrderServiceClient orderServiceClient) {
+            , Environment env, RestTemplate restTemplate, OrderServiceClient orderServiceClient
+            ,CircuitBreakerFactory circuitBreakerFactory) {
         //Bcrypt-> 빈으로 등록해 줘야함(가장 먼저 빈으로 등록되는 곳에 - springbootaplication)
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.env = env;
         this.restTemplate = restTemplate;
         this.orderServiceClient = orderServiceClient;
+        this.circuitBreakerFactory = circuitBreakerFactory;
     }
 
     @Override
@@ -108,11 +113,16 @@ public class UserServiceImpl implements UserService{
 //        }catch (FeignException e){
 //            log.error(e.getMessage());
 //        }
-        List<ResponseOrder> ordersList = orderServiceClient.getOrders(userId);
 
+        /* Error Decoder */
+//        List<ResponseOrder> ordersList = orderServiceClient.getOrders(userId);
 
-
-
+        /* circuit breaker */
+        log.info("Before call order-service");
+        CircuitBreaker circuitBreaker = circuitBreakerFactory.create("circuitbreaker");
+        List<ResponseOrder> ordersList = circuitBreaker.run(() -> orderServiceClient.getOrders(userId),
+                throwable -> new ArrayList<>());
+        log.info("After call order-service");
         userDto.setOrders(ordersList);
 
         return userDto;
